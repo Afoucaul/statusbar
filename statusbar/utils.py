@@ -1,4 +1,5 @@
 WIDTH_BLOCKS = " ▏▎▍▌▋▊▉█"
+STAIR_BLOCKS = "▂▄▆█"
 
 
 def make_gauge_image(percentage, *, width=8):
@@ -11,3 +12,11 @@ def make_gauge_image(percentage, *, width=8):
     image += " " * (width - len(image))
 
     return image
+
+
+def make_stair_image(percentage):
+    blocks = round(percentage * len(STAIR_BLOCKS))
+    return (
+        STAIR_BLOCKS[:blocks]
+        + " " * (len(STAIR_BLOCKS) - blocks)
+    )

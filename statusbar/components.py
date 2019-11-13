@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess as sp
 import threading
 import time
@@ -7,11 +8,11 @@ from statusbar import utils
 
 
 class Component(threading.Thread):
-    def __init__(self, fmt, delay=1):
+    def __init__(self, fmt, *, delay=1):
         super().__init__()
 
         self._delay = delay
-        self._fmt = fmt
+        self.fmt = fmt
 
         self._status = ""
         self._status_lock = threading.Lock()
@@ -22,11 +23,12 @@ class Component(threading.Thread):
     def run(self):
         try:
             while True:
-                self.status = self._fmt.format(**self.fetch())
+                self.fetch()
                 time.sleep(self._delay)
         except Exception as error:
             print(error)
             self.status = type(error).__name__
+            raise
 
     @property
     def status(self) -> str:
@@ -46,8 +48,8 @@ class Battery(Component):
         'discharging': '<'
     }
 
-    def __init__(self, delay, index, fmt):
-        super().__init__(fmt, delay)
+    def __init__(self, fmt, index, *, delay=1):
+        super().__init__(fmt, delay=delay)
         self.index = index
 
     def fetch(self):
@@ -79,7 +81,7 @@ class Battery(Component):
 
         energy_gauge = utils.make_gauge_image(energy)
         status = self.BATTERY_STATUS.get(status, '?')
-        return {'energy': energy_gauge, 'status': status}
+        self.status = self.fmt.format(energy=energy_gauge, status=status)
 
 
 class Volume(Component):
@@ -89,4 +91,29 @@ class Volume(Component):
             shell=True,
             stdout=sp.PIPE
         )
-        return {'volume': int(ps.communicate()[0]) / 100}
+        self.status = self.fmt.format(volume=int(ps.communicate()[0]) / 100)
+
+
+class WiFi(Component):
+    WIFI_REGEX = re.compile(
+        r'ESSID:"(?P<essid>.*?)".*'
+        r'Link Quality=(?P<power>\d+)/(?P<max_power>\d+)',
+        re.MULTILINE + re.DOTALL
+    )
+
+    def __init__(self, fmt, interface, *, delay=1):
+        super().__init__(fmt, delay=delay)
+        self.interface = interface
+
+    def fetch(self):
+        output = sp.getoutput(['iwconfig', self.interface])
+        match = self.WIFI_REGEX.search(output)
+
+        if match:
+            essid = match.group('essid')
+            power = float(match.group('power')) / float(match.group('max_power'))
+            power_image = utils.make_stair_image(power)
+            self.status = self.fmt.format(essid=essid, power=power_image)
+
+        else:
+            self.status = "No WiFi"
