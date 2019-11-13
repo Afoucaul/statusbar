@@ -1,4 +1,5 @@
 import os
+import subprocess as sp
 import threading
 import time
 
@@ -79,3 +80,13 @@ class Battery(Component):
         energy_gauge = utils.make_gauge_image(energy)
         status = self.BATTERY_STATUS.get(status, '?')
         return {'energy': energy_gauge, 'status': status}
+
+
+class Volume(Component):
+    def fetch(self):
+        ps = sp.Popen(
+            """pactl list sinks | grep -oP "(?<=Volume:.)*\d+(?=%)" | head -1""",
+            shell=True,
+            stdout=sp.PIPE
+        )
+        return {'volume': int(ps.communicate()[0]) / 100}
