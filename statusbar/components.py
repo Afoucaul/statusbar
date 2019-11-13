@@ -1,3 +1,4 @@
+import datetime as dt
 import os
 import re
 import subprocess as sp
@@ -117,3 +118,12 @@ class WiFi(Component):
 
         else:
             self.status = "No WiFi"
+
+
+class DateTime(Component):
+    def fetch(self):
+        now = dt.datetime.now()
+        date = now.strftime("%d/%m/%y")
+        time = now.strftime("%H:%M")
+
+        self.status = self.fmt.format(date=date, time=time)
