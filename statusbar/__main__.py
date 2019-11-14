@@ -1,6 +1,6 @@
-import statusbar
-from statusbar import components
 from statusbar import bar as statusbar
+from statusbar import components
+from statusbar import utils
 from statusbar import weathercli
 
 
@@ -23,5 +23,5 @@ components = {
     'weather': components.Weather("{city} - {temp}°, {condition}", session),
 }
 
-bar = statusbar.StatusBar(fmt, components, print)
+bar = statusbar.StatusBar(fmt, components, utils.xsetroot_name)
 bar.start()

@@ -1,3 +1,6 @@
+import subprocess as sp
+
+
 WIDTH_BLOCKS = " ▏▎▍▌▋▊▉█"
 STAIR_BLOCKS = "▂▄▆█"
 
@@ -20,3 +23,7 @@ def make_stair_image(percentage):
         STAIR_BLOCKS[:blocks]
         + " " * (len(STAIR_BLOCKS) - blocks)
     )
+
+
+def xsetroot_name(name):
+    return sp.run(['xsetroot', '-name', name])
