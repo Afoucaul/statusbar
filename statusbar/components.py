@@ -6,6 +6,7 @@ import threading
 import time
 
 from statusbar import utils
+from statusbar import weathercli
 
 
 class Component(threading.Thread):
@@ -127,3 +128,18 @@ class DateTime(Component):
         time = now.strftime("%H:%M")
 
         self.status = self.fmt.format(date=date, time=time)
+
+
+class Weather(Component):
+    def __init__(self, fmt, cli, *, delay=3600):
+        super().__init__(fmt, delay=delay)
+        self.cli = cli
+
+    def fetch(self):
+        current_coordinates = weathercli.current_coordinates()
+        info = self.cli.weather(**current_coordinates).json()
+        self.status = self.fmt.format(
+            city=info['name'],
+            temp=info['main']['temp'],
+            condition=info['weather'][0]['main']
+        )
