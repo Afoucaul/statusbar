@@ -14,8 +14,12 @@ API_URL = "api.openweathermap.org"
 
 
 def current_coordinates():
-    lat, lon = geocoder.ip('me').latlng
-    return {'lat': lat, 'lon': lon}
+    try:
+        lat, lon = geocoder.ip('me').latlng
+        return {'lat': lat, 'lon': lon}
+
+    except TypeError:
+        return None
 
 
 class Session(requests.Session):

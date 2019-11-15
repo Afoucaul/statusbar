@@ -136,10 +136,26 @@ class Weather(Component):
         self.cli = cli
 
     def fetch(self):
-        current_coordinates = weathercli.current_coordinates()
-        info = self.cli.weather(**current_coordinates).json()
-        self.status = self.fmt.format(
-            city=info['name'],
-            temp=info['main']['temp'],
-            condition=info['weather'][0]['main']
-        )
+        current_coordinates = None
+        while current_coordinates is None:
+            current_coordinates = weathercli.current_coordinates()
+            if current_coordinates is None:
+                self.status = "Fetching coordinates..."
+                time.sleep(10)
+
+        success = False
+        while not success:
+            response = self.cli.weather(**current_coordinates)
+            success = response.status_code == 200
+
+            if not success:
+                self.status = "Fetching weather..."
+                time.sleep(10)
+                continue
+
+            info = response.json()
+            self.status = self.fmt.format(
+                city=info['name'],
+                temp=info['main']['temp'],
+                condition=info['weather'][0]['main']
+            )
