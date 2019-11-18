@@ -125,10 +125,23 @@ class WiFi(Component):
 
 
 class DateTime(Component):
-    def __init__(self, fmt):
-        super().__init__(fmt, delay=0.5)
+    def __init__(self, fmt, *, blink=True):
+        if blink:
+            delay = 0.5
+            self.fetch = self.fetch_blink
+        else:
+            delay = 1
+            self.fetch = self.fetch_no_blink
 
-    def fetch(self):
+        super().__init__(fmt, delay=delay)
+
+    def fetch_no_blink(self):
+        now = dt.datetime.now()
+        date = now.strftime("%d/%m/%y")
+
+        self.status = self.fmt.format(date=date, time=time)
+
+    def fetch_blink(self):
         now = dt.datetime.now()
         date = now.strftime("%d/%m/%y")
         if now.microsecond // 500_000 == 0:
