@@ -10,7 +10,7 @@ from statusbar import weathercli
 
 
 class Component(threading.Thread):
-    def __init__(self, fmt, *, delay=1):
+    def __init__(self, fmt: str, *, delay: float=1):
         super().__init__()
 
         self._delay = delay
@@ -19,10 +19,10 @@ class Component(threading.Thread):
         self._status = ""
         self._status_lock = threading.Lock()
 
-    def fetch(self):
+    def fetch(self) -> None:
         raise NotImplementedError
 
-    def run(self):
+    def run(self) -> None:
         try:
             while True:
                 self.fetch()
@@ -31,6 +31,10 @@ class Component(threading.Thread):
             print(error)
             self.status = type(error).__name__
             raise
+
+    @property
+    def delay(self) -> float:
+        return self._delay
 
     @property
     def status(self) -> str:
@@ -50,29 +54,28 @@ class Battery(Component):
         'discharging': '<'
     }
 
-    def __init__(self, fmt, index, *, delay=1):
+    def __init__(self, fmt, path, *, delay=1):
         super().__init__(fmt, delay=delay)
-        self.index = index
+        self.path = path
 
     def fetch(self):
-        base = f"/sys/class/power_supply/BAT{self.index}"
         present = False
-        with open(os.path.join(base, 'present'), 'r') as fd:
+        with open(os.path.join(self.path, 'present'), 'r') as fd:
             content = fd.read()
             present = content.strip() == '1'
 
         energy_max = 0
-        with open(os.path.join(base, 'energy_full_design'), 'r') as fd:
+        with open(os.path.join(self.path, 'energy_full_design'), 'r') as fd:
             content = fd.read()
             energy_max = float(content)
 
         energy_remaining = 0
-        with open(os.path.join(base, 'energy_now'), 'r') as fd:
+        with open(os.path.join(self.path, 'energy_now'), 'r') as fd:
             content = fd.read()
             energy_remaining = float(content)
 
         status = ""
-        with open(os.path.join(base, 'status'), 'r') as fd:
+        with open(os.path.join(self.path, 'status'), 'r') as fd:
             content = fd.read()
             status = content.strip().lower()
 
@@ -122,10 +125,16 @@ class WiFi(Component):
 
 
 class DateTime(Component):
+    def __init__(self, fmt):
+        super().__init__(fmt, delay=0.5)
+
     def fetch(self):
         now = dt.datetime.now()
         date = now.strftime("%d/%m/%y")
-        time = now.strftime("%H:%M")
+        if now.microsecond // 500_000 == 0:
+            time = now.strftime("%H:%M")
+        else:
+            time = now.strftime("%H %M")
 
         self.status = self.fmt.format(date=date, time=time)
 

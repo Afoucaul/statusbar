@@ -3,12 +3,15 @@ import time
 
 
 class StatusBar(threading.Thread):
-    def __init__(self, fmt: str, components: dict, callback, delay: int=1):
+    def __init__(self, fmt: str, components: dict, callback, delay: int=None):
         super().__init__()
         self.fmt = fmt
         self.components = components
         self.callback = callback
-        self.delay = delay
+        if delay is not None:
+            self.delay = delay
+        else:
+            self.delay = min(x.delay for x in components.values())
 
     def start(self):
         for component in self.components.values():
