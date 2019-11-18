@@ -19,14 +19,15 @@ class Component(threading.Thread):
         self._status = ""
         self._status_lock = threading.Lock()
 
-    def fetch(self) -> None:
+    def update_status(self) -> None:
         raise NotImplementedError
 
     def run(self) -> None:
         try:
             while True:
-                self.fetch()
+                self.update_status()
                 time.sleep(self._delay)
+
         except Exception as error:
             print(error)
             self.status = type(error).__name__
@@ -84,6 +85,11 @@ class Battery(Component):
         else:
             energy = energy_remaining / energy_max
 
+        return status, energy
+
+    def update_status(self):
+        status, energy = self.fetch()
+
         energy_gauge = utils.make_gauge_image(energy)
         status = self.BATTERY_STATUS.get(status, '?')
         self.status = self.fmt.format(energy=energy_gauge, status=status)
@@ -96,7 +102,13 @@ class Volume(Component):
             shell=True,
             stdout=sp.PIPE
         )
-        self.status = self.fmt.format(volume=int(ps.communicate()[0]) / 100)
+        volume = int(ps.communicate()[0]) / 100
+
+        return volume
+
+    def update_status(self):
+        volume = self.fetch()
+        self.status = self.fmt.format(volume=volume)
 
 
 class WiFi(Component):
@@ -116,10 +128,17 @@ class WiFi(Component):
 
         if match:
             essid = match.group('essid')
-            power = float(match.group('power')) / float(match.group('max_power'))
+            return essid, float(match.group('power')) / float(match.group('max_power'))
+
+        else:
+            return None
+
+    def update_status(self):
+        result = self.fetch()
+        if result is not None:
+            essid, power = result
             power_image = utils.make_stair_image(power)
             self.status = self.fmt.format(essid=essid, power=power_image)
-
         else:
             self.status = "No WiFi"
 
@@ -138,8 +157,9 @@ class DateTime(Component):
     def fetch_no_blink(self):
         now = dt.datetime.now()
         date = now.strftime("%d/%m/%y")
+        time = now.strftime("%H:%M")
 
-        self.status = self.fmt.format(date=date, time=time)
+        return date, time
 
     def fetch_blink(self):
         now = dt.datetime.now()
@@ -149,6 +169,10 @@ class DateTime(Component):
         else:
             time = now.strftime("%H %M")
 
+        return date, time
+
+    def update_status(self):
+        date, time = self.fetch()
         self.status = self.fmt.format(date=date, time=time)
 
 
@@ -157,7 +181,7 @@ class Weather(Component):
         super().__init__(fmt, delay=delay)
         self.cli = cli
 
-    def fetch(self):
+    def update_status(self):
         current_coordinates = None
         while current_coordinates is None:
             current_coordinates = weathercli.current_coordinates()
