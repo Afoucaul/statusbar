@@ -16,11 +16,11 @@ def main():
 
     session = weathercli.Session.from_env()
     parts = {
-        'bat0': components.Battery(
+        'bat0': components.DwmBattery(
             "M:[{energy}]{status}",
             "/sys/class/power_supply/BAT0"
         ),
-        'bat1': components.Battery(
+        'bat1': components.DwmBattery(
             "S:[{energy}]{status}",
             "/sys/class/power_supply/BAT1"
         ),

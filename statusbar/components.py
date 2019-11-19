@@ -205,3 +205,22 @@ class Weather(Component):
                 temp=info['main']['temp'],
                 condition=info['weather'][0]['main']
             )
+
+
+class DwmBattery(Battery):
+    def update_status(self):
+        status, energy = self.fetch()
+
+        energy_gauge = utils.make_gauge_image(energy)
+        color = ""
+        if status == 'discharging':
+            if energy <= 0.1:
+                color = "\x04"
+            elif energy <= 0.3:
+                color = "\x03"
+
+        elif status == 'charging':
+            color = "\x02"
+
+        status = self.BATTERY_STATUS.get(status, '?')
+        self.status = color + self.fmt.format(energy=energy_gauge, status=status) + "\x01"
