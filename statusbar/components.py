@@ -1,5 +1,6 @@
 import datetime as dt
 import os
+import psutil
 import re
 import subprocess as sp
 import threading
@@ -29,7 +30,6 @@ class Component(threading.Thread):
                 time.sleep(self._delay)
 
         except Exception as error:
-            print(error)
             self.status = type(error).__name__
             raise
 
@@ -92,6 +92,7 @@ class Battery(Component):
 
         energy_gauge = utils.make_gauge_image(energy)
         status = self.BATTERY_STATUS.get(status, '?')
+        print(self.path)
         self.status = self.fmt.format(energy=energy_gauge, status=status)
 
 
@@ -213,7 +214,7 @@ class DwmBattery(Battery):
 
         energy_gauge = utils.make_gauge_image(energy)
         color = ""
-        if status == 'discharging':
+        if status not in ("charging", "full"):
             if energy <= 0.1:
                 color = "\x04"
             elif energy <= 0.3:
@@ -224,3 +225,20 @@ class DwmBattery(Battery):
 
         status = self.BATTERY_STATUS.get(status, '?')
         self.status = color + self.fmt.format(energy=energy_gauge, status=status) + "\x01"
+
+
+class CpuUsage(Component):
+    def __init__(self, fmt, *, delay=5, window_size=5):
+        super().__init__(fmt, delay=delay)
+        self.values = [0] * window_size
+
+    def fetch(self):
+        return psutil.cpu_percent() / 100
+
+    def update_status(self):
+        new_value = self.fetch()
+        self.values.pop(0)
+        self.values.append(new_value)
+
+        graph_image = utils.make_graph_image(self.values)
+        self.status = self.fmt.format(cpu=graph_image)
