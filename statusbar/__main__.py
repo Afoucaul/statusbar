@@ -8,6 +8,7 @@ def main():
     fmt = " " + " | ".join((
         "{bat0}",
         "{bat1}",
+        "{cpu}",
         "{vol}",
         "{wifi}",
         "{weather}",
@@ -16,11 +17,11 @@ def main():
 
     session = weathercli.Session.from_env()
     parts = {
-        'bat0': components.DwmBattery(
+        'bat0': components.Battery(
             "M:[{energy}]{status}",
             "/sys/class/power_supply/BAT0"
         ),
-        'bat1': components.DwmBattery(
+        'bat1': components.Battery(
             "S:[{energy}]{status}",
             "/sys/class/power_supply/BAT1"
         ),
@@ -28,6 +29,7 @@ def main():
         'wifi': components.WiFi("{essid}: {power}", "wlp3s0"),
         'datetime': components.DateTime("{date} - {time}"),
         'weather': components.Weather("{city} - {temp}°, {condition}", session),
+        'cpu': components.CpuUsage("CPU: {cpu}")
     }
 
     bar = statusbar.StatusBar(fmt, parts, utils.xsetroot_name)
