@@ -3,6 +3,7 @@ import subprocess as sp
 
 WIDTH_BLOCKS = " ▏▎▍▌▋▊▉█"
 STAIR_BLOCKS = "▂▄▆█"
+GRAPH_BLOCKS = "▁▂▃▄▅▆▇█"
 
 
 def make_gauge_image(percentage, *, width=8):
@@ -27,3 +28,10 @@ def make_stair_image(percentage):
 
 def xsetroot_name(name):
     return sp.run(['xsetroot', '-name', name])
+
+
+def make_graph_image(percentages):
+    return "".join(map(
+        lambda x: GRAPH_BLOCKS[min(len(GRAPH_BLOCKS) - 1, int(x * len(GRAPH_BLOCKS)))],
+        percentages
+    ))
