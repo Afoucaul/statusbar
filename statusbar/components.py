@@ -92,7 +92,6 @@ class Battery(Component):
 
         energy_gauge = utils.make_gauge_image(energy)
         status = self.BATTERY_STATUS.get(status, '?')
-        print(self.path)
         self.status = self.fmt.format(energy=energy_gauge, status=status)
 
 
