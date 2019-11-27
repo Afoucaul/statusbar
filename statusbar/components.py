@@ -202,7 +202,7 @@ class Weather(Component):
             info = response.json()
             self.status = self.fmt.format(
                 city=info['name'],
-                temp=int(float(info['main']['temp'])),
+                temp=round(float(info['main']['temp'])),
                 condition=info['weather'][0]['main']
             )
 
