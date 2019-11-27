@@ -29,7 +29,7 @@ def main():
         'wifi': components.WiFi("{essid}: {power}", "wlp3s0"),
         'datetime': components.DateTime("{date} - {time}"),
         'weather': components.Weather("{city} - {temp}°, {condition}", session),
-        'cpu': components.CpuUsage("CPU: {cpu}")
+        'cpu': components.CpuUsage("CPU: {cpu}", delay=1)
     }
 
     bar = statusbar.StatusBar(fmt, parts, utils.xsetroot_name)
