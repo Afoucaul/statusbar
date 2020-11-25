@@ -191,20 +191,24 @@ class Weather(Component):
 
         success = False
         while not success:
-            response = self.cli.weather(**current_coordinates)
-            success = response.status_code == 200
+            try:
+                response = self.cli.weather(**current_coordinates)
+                success = response.status_code == 200
 
-            if not success:
-                self.status = "Fetching weather..."
-                time.sleep(10)
-                continue
+                if not success:
+                    self.status = "Fetching weather..."
+                    time.sleep(10)
+                    continue
 
-            info = response.json()
-            self.status = self.fmt.format(
-                city=info['name'],
-                temp=round(float(info['main']['temp'])),
-                condition=info['weather'][0]['main']
-            )
+                info = response.json()
+                self.status = self.fmt.format(
+                    city=info['name'],
+                    temp=round(float(info['main']['temp'])),
+                    condition=info['weather'][0]['main']
+                )
+
+            except Exception as error:
+                pass
 
 
 class DwmBattery(Battery):
